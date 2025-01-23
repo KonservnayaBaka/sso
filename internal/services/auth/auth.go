@@ -102,7 +102,7 @@ func (a *Auth) Login(ctx context.Context, email string, password string, appID i
 	return token, nil
 }
 
-func (a *Auth) RegisterNewUSer(ctx context.Context, email string, pass string) (int64, error) {
+func (a *Auth) RegisterNewUser(ctx context.Context, email string, pass string) (int64, error) {
 	const op = "auth.RegisterNewUser"
 
 	log := a.log.With(
@@ -148,7 +148,7 @@ func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 
 	isAdmin, err := a.usrProvider.IsAdmin(ctx, userID)
 	if err != nil {
-		if errors.Is(err, storage.ErrAppNotFount) {
+		if errors.Is(err, storage.ErrUserNotFound) {
 			log.Warn("user not found", sl.Err(err))
 		}
 

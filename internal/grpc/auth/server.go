@@ -2,14 +2,16 @@ package auth
 
 import (
 	"context"
+	"errors"
 	ssov1 "github.com/KonservnayaBaka/protos/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sso/internal/services/auth"
 )
 
 type Auth interface {
-	Login(ctx context.Context, email string, password string, apiID int32) (token string, err error)
+	Login(ctx context.Context, email string, password string, apiID int) (token string, err error)
 	RegisterNewUser(ctx context.Context, email string, password string) (userID int64, err error)
 	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
@@ -34,9 +36,11 @@ func (s *serverApi) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.
 		return nil, err
 	}
 
-	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), req.GetAppId())
+	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), int(req.GetAppId()))
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -50,7 +54,10 @@ func (s *serverApi) Register(ctx context.Context, req *ssov1.RegisterRequest) (*
 
 	userID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, auth.ErrUserExists) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -64,7 +71,10 @@ func (s *serverApi) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserId())
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, auth.ErrUserExists) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
