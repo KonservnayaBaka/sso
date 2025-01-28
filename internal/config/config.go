@@ -9,15 +9,24 @@ import (
 )
 
 type Config struct {
-	Env         string        `yaml:"env" env-default:"local"`
-	StoragePath string        `yaml:"storage_path" env-required:"true"`
-	TokenTTL    time.Duration `yaml:"token_ttl" env-required:"true"`
-	GRPC        GRPCConfig    `yaml:"grpc"`
+	Env         string         `yaml:"env" env-default:"local"`
+	StoragePath string         `yaml:"storage_path" env-required:"true"`
+	TokenTTL    time.Duration  `yaml:"token_ttl" env-required:"true"`
+	GRPC        GRPCConfig     `yaml:"grpc"`
+	Database    DatabaseConfig `yaml:"database" env-required:"true"`
 }
 
 type GRPCConfig struct {
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"`
+}
+
+type DatabaseConfig struct {
+	Host    string `yaml:"host" env-default:"localhost"`
+	Port    int    `yaml:"port" env-default:"5432"`
+	User    string `yaml:"user" env-default:"postgres"`
+	DBName  string `yaml:"dbname" env-default:"sso"`
+	SslMode string `yaml:"sslmode" env-default:"disable"`
 }
 
 func MustLoad() *Config {
