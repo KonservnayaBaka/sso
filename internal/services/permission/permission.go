@@ -20,8 +20,8 @@ type PermissionControl interface {
 }
 
 var (
-	ErrPermissionExists = errors.New("Permission exists")
-	ErrUserDoesNotExist = errors.New("User does not exist")
+	ErrPermissionExists       = errors.New("permission exists")
+	ErrPermissionDoesNotExist = errors.New("ermission does not exist")
 )
 
 func New(
@@ -61,5 +61,26 @@ func (p *Permission) AddPermission(ctx context.Context, user_id int, permission 
 	return success, nil
 }
 func (p *Permission) RemovePermission(ctx context.Context, user_id int, permission string) (bool, error) {
-	panic("implement me")
+	const op = "permission.RemovePermission"
+
+	log := p.log.With(
+		slog.String("op", op),
+		slog.String("user_id", strconv.Itoa(user_id)),
+	)
+
+	success, err := p.permissionControl.RemovePermission(ctx, user_id, permission)
+	if err != nil {
+		if errors.Is(err, ErrPermissionDoesNotExist) {
+			log.Warn("permission does not exist", sl.Err(err))
+
+			return false, fmt.Errorf("%s: %w", op, ErrPermissionDoesNotExist)
+		}
+		log.Error("failed tp removed permission", sl.Err(err))
+
+		return false, fmt.Errorf("%s, %w", op, err)
+	}
+
+	log.Info("permission removed")
+
+	return success, nil
 }

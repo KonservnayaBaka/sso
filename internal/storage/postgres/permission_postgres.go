@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"sso/internal/storage"
 )
@@ -24,5 +25,16 @@ func (s *Storage) AddPermission(ctx context.Context, user_id int, permission str
 }
 
 func (s *Storage) RemovePermission(ctx context.Context, user_id int, permission string) (bool, error) {
-	panic("implement me")
+	const op = "storage.postgres.permission.RemovePermission"
+
+	_, err := s.pool.Exec(ctx, "DELETE FROM user_permissions WHERE user_id = $1 AND permission = $2", user_id, permission)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, fmt.Errorf("%s: %w", op, storage.ErrPermissionNotFound)
+		}
+
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return true, nil
 }

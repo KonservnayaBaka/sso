@@ -47,5 +47,19 @@ func (s *serverAPI) AddPermission(ctx context.Context, req *ssov1.AddPermissionR
 }
 
 func (s *serverAPI) RemovePermission(ctx context.Context, req *ssov1.RemovePermissionRequest) (*ssov1.RemovePermissionResponse, error) {
-	panic("implement me")
+	err := validateRemovePermission(req)
+	if err != nil {
+		return nil, err
+	}
+
+	success, err := s.permission.RemovePermission(ctx, int(req.UserId), req.Permission)
+	if err != nil {
+		if errors.Is(err, permission.ErrPermissionDoesNotExist) {
+			return nil, status.Error(codes.AlreadyExists, "permission doesnt exists")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &ssov1.RemovePermissionResponse{Success: success}, nil
 }
