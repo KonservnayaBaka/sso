@@ -7,6 +7,7 @@ import (
 	"net"
 	authgrpc "sso/internal/grpc/auth"
 	permissiongrpc "sso/internal/grpc/permission"
+	userinfogrpc "sso/internal/grpc/user_info"
 )
 
 type App struct {
@@ -15,11 +16,12 @@ type App struct {
 	port       int
 }
 
-func New(log *slog.Logger, authService authgrpc.Auth, permissionService permissiongrpc.Permission, port int) *App {
+func New(log *slog.Logger, authService authgrpc.Auth, permissionService permissiongrpc.Permission, userInfoService userinfogrpc.UserInfo, port int) *App {
 	gRPCServer := grpc.NewServer()
 
 	authgrpc.Register(gRPCServer, authService)
 	permissiongrpc.Register(gRPCServer, permissionService)
+	userinfogrpc.Register(gRPCServer, userInfoService)
 
 	return &App{
 		log:        log,
