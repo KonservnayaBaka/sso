@@ -5,6 +5,7 @@ import (
 	grpcapp "sso/internal/app/grpc"
 	"sso/internal/config"
 	"sso/internal/services/auth"
+	"sso/internal/services/permission"
 	"sso/internal/storage/postgres"
 )
 
@@ -19,8 +20,9 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	}
 
 	authService := auth.New(log, storage, storage, storage, cfg.TokenTTL)
+	permissionService := permission.New(log, storage)
 
-	grpcApp := grpcapp.New(log, authService, cfg.GRPC.Port)
+	grpcApp := grpcapp.New(log, authService, permissionService, cfg.GRPC.Port)
 
 	return &App{
 		GRPCSrv: grpcApp,
